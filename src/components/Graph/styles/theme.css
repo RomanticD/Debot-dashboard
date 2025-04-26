@@ -1,0 +1,118 @@
+/* Theme styles for Graph components */
+
+/* Light mode - default */
+.theme-light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --border-color: #d1d5db;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode */
+.theme-dark,
+:root.dark .theme-light {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #d1d5db;
+  --border-color: #4b5563;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Apply theme variables to components */
+.graph-container {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.graph-card {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.graph-header {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.graph-footer {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+.graph-button {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.graph-button:hover {
+  background-color: var(--bg-secondary);
+}
+
+.graph-input {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.graph-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.graph-label {
+  color: var(--text-secondary);
+}
+
+.graph-table {
+  border-color: var(--border-color);
+}
+
+.graph-table th {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.graph-table td {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.graph-table tr:nth-child(even) td {
+  background-color: var(--bg-secondary);
+}
+
+/* Chart container specific styling */
+.chart-container {
+  /*border: 1px solid var(--border-color);*/
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Add transition for smooth theme switching */
+.theme-light,
+.theme-dark,
+.graph-container,
+.graph-card,
+.graph-header,
+.graph-footer,
+.graph-button,
+.graph-input,
+.graph-table,
+.graph-table th,
+.graph-table td {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+} 
