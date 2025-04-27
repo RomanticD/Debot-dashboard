@@ -38,6 +38,7 @@ export interface DashboardCreator {
  */
 export function createDashboard(creator: DashboardCreator): DashboardConfig {
   const config: DashboardConfig = {
+    id: creator.getId(),
     title: creator.getTitle(),
     charts: creator.getCharts(),
   };

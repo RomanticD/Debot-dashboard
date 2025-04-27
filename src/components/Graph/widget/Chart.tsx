@@ -1,5 +1,5 @@
 import * as echarts from 'echarts';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ChartConfig, ChartData } from '~/components/Graph/types/charts';
 import chartOptionGenerators from '~/components/Graph/utils/chartOptionGenerators';
 import { useQuery } from '@tanstack/react-query';
@@ -10,9 +10,11 @@ import { useTheme } from '~/components/Graph/context/ThemeContext';
 function Chart({ config }: { config: ChartConfig }) {
     const chartRef = useRef<HTMLDivElement>(null);
     const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+    const resizeObserverRef = useRef<ResizeObserver | null>(null);
+    const isInitialMount = useRef(true);
     const [fetchedData, setFetchedData] = useState<ChartData | undefined>(undefined);
     const chartData = config.dataUrl ? fetchedData : config.chartData;
-    const { theme } = useTheme(); // Get current theme from context
+    const { theme } = useTheme();
 
     const { isLoading, error: queryError, data: queryData } = useQuery({
         queryKey: ['chartData', config.dataUrl],
@@ -35,100 +37,50 @@ function Chart({ config }: { config: ChartConfig }) {
         }
     }, [queryData]);
 
-    // Effect to handle theme changes
-    useEffect(() => {
-        if (!chartRef.current) return;
+    const updateChart = useCallback(() => {
+        if (!chartInstanceRef.current || !chartData) return;
 
-        // Dispose old instance when theme changes
-        if (chartInstanceRef.current) {
-            try {
-                chartInstanceRef.current.dispose();
-                chartInstanceRef.current = null;
-            } catch (e) {
-                console.warn("Error disposing chart on theme change:", e);
-            }
-        }
-
-        // Re-initialize with the new theme
         try {
-            chartInstanceRef.current = echarts.init(chartRef.current, theme);
-
-            // Re-render with the new theme if data is available
-            if (chartData && !isLoading) {
-                const generator = chartOptionGenerators[config.chartType];
-                if (generator) {
-                    const option = {
-                        title: {
-                            text: config.title,
-                            subtext: config.subtext,
-                            textStyle: {
-                                fontSize: 18,
-                                fontWeight: 'bold',
-                                color: theme === 'dark' ? '#ffffff' : '#666666',
-                            },
-                            left: 'center'
-                        },
-                        tooltip: {},
-                        grid: { containLabel: true },
-                        ...generator(chartData),
-                        ...config.customOptions
-                    };
-                    chartInstanceRef.current.setOption(option, false);}
-            }
+            const chartType = config.chartType;
+            const option = chartOptionGenerators[chartType](chartData);
+            chartInstanceRef.current.setOption({
+                ...option,
+                title: {
+                    text: config.title,
+                    subtext: config.subtext,
+                    left: 'center',
+                    top: 0,
+                    ...(theme === 'dark' ? { textStyle: { color: '#e5e7eb' } } : {})
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                ...config.customOptions
+            });
         } catch (e) {
-            console.error("Error initializing chart with theme:", e);
+            console.error("Error updating chart with data:", e);
         }
-    }, [theme]);
+    }, [chartData, config, theme]);
 
     useEffect(() => {
         if (!chartRef.current) return;
-
-        const generator = chartOptionGenerators[config.chartType];
-        if (!generator) {
-            console.error(`Chart generator for type '${config.chartType}' not found.`);
-            return;
-        }
 
         if (!chartInstanceRef.current) {
-             try {
-                // Initialize with current theme
-                chartInstanceRef.current = echarts.init(chartRef.current, theme);
-             } catch (e) {
-                 console.error("Error initializing chart:", e);
-                 return;
-             }
-        }
-
-        if (chartData && !isLoading) {
             try {
-                const option = {
-                    title: { 
-                        text: config.title, 
-                        subtext: config.subtext,
-                        textStyle: {
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            color: theme === 'dark' ? '#ffffff' : '#666666',
-                        },
-                        left: 'center'
-                    },
-                    tooltip: {},
-                    grid: { containLabel: true },
-                    ...generator(chartData),
-                    ...config.customOptions
-                };
-                chartInstanceRef.current.setOption(option, false); 
-             } catch (e) {
-                 console.error("Error setting chart option:", e);
-             }
-        } else if (!isLoading && !chartData && chartInstanceRef.current) {
-             try {
-                chartInstanceRef.current.clear();
-             } catch (e) {
-                 console.warn("Error clearing chart:", e);
-             }
+                console.log('Initializing chart instance');
+                chartInstanceRef.current = echarts.init(chartRef.current, theme);
+            } catch (e) {
+                console.error("Error initializing chart:", e);
+                return;
+            }
         }
-
+        updateChart();
         return () => {
             if (chartInstanceRef.current) {
                 try {
@@ -141,41 +93,87 @@ function Chart({ config }: { config: ChartConfig }) {
                     console.warn("Error disposing chart on unmount:", e);
                 }
             }
+            isInitialMount.current = true;
         };
-    }, [config.chartType, config.title, config.subtext, config.customOptions, chartData, isLoading, chartRef]);
+    }, [theme, updateChart, chartRef]);
 
     useEffect(() => {
-        const handleResize = () => {
-            if (chartInstanceRef.current) {
-                 try {
-                    chartInstanceRef.current.resize();
-                 } catch (e) {
-                     console.warn("Error resizing chart:", e);
-                 }
-            }
-        };
-
-        if(chartInstanceRef.current) {
-            window.addEventListener('resize', handleResize);
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
         }
 
+        if (chartInstanceRef.current && chartRef.current) {
+            console.log('Theme changed, re-initializing chart');
+            try {
+                chartInstanceRef.current.dispose();
+                chartInstanceRef.current = echarts.init(chartRef.current, theme);
+                updateChart();
+            } catch (e) {
+                console.error("Error re-initializing chart on theme change:", e);
+                chartInstanceRef.current = null;
+            }
+        }
+    }, [theme, updateChart]);
+
+    useEffect(() => {
+        if (!chartRef.current || !chartInstanceRef.current) return;
+        if (resizeObserverRef.current) {
+            resizeObserverRef.current.disconnect();
+        }
+        resizeObserverRef.current = new ResizeObserver(() => {
+            if (chartInstanceRef.current) {
+                try {
+                    chartInstanceRef.current.resize();
+                 } catch (e) {
+                     console.warn("Error resizing chart on observer:", e);
+                 }
+            }
+        });
+        resizeObserverRef.current.observe(chartRef.current);
+
+        const handleResize = () => {
+            if (chartInstanceRef.current) {
+                try {
+                    chartInstanceRef.current.resize();
+                } catch (e) {
+                    console.warn("Error resizing chart on window resize:", e);
+                }
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        const triggerResize = () => {
+            if (chartInstanceRef.current) {
+                try {
+                    requestAnimationFrame(() => {
+                        chartInstanceRef.current?.resize();
+                    });
+                } catch (e) {
+                    console.warn("Error on forced chart resize:", e);
+                }
+            }
+        };
+        requestAnimationFrame(triggerResize);
+        const resizeTimerId = setTimeout(triggerResize, 200);
         return () => {
             window.removeEventListener('resize', handleResize);
+            if (resizeObserverRef.current) {
+                resizeObserverRef.current.disconnect();
+            }
+            clearTimeout(resizeTimerId);
         };
-    }, [chartInstanceRef.current]);
-
+    }, [chartInstanceRef, chartRef]);
 
     if (isLoading && config.dataUrl) {
         return <ChartSkeleton />;
     }
-
     if (queryError) {
         return <div className={`flex items-center justify-center h-[300px] w-full rounded-md ${theme === 'dark' ? 'bg-red-900' : 'bg-red-50'}`}>
             <span className={theme === 'dark' ? 'text-red-300' : 'text-red-500'}>{queryError.message}</span>
         </div>;
     }
 
-    return <div ref={chartRef} style={{ height: '800px', width: '100%' }} className={`chart-container theme-${theme}`} />;
+    return <div ref={chartRef} style={{ height: '800px', width: '100%' }} className="chart-container" />;
 }
 
 export default Chart; 

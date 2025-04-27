@@ -30,11 +30,12 @@ export interface ChartConfig {
     title: string;
     subtext?: string;
     customOptions?: Record<string, any>;
-    aspectRatio?: string; // 图表宽高比，例如 '16/9', '4/3', '1/1'
+    aspectRatio?: string;
 }
 
 // 仪表盘配置接口
 export interface DashboardConfig {
+    id?: string | number;
     title: string;
     description?: string;
     charts: ChartConfig[];
