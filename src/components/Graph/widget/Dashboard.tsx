@@ -12,24 +12,22 @@ import {
   DragEndEvent,
   DragOverlay,
   UniqueIdentifier,
-  DragOverEvent,
-  useDraggable,
   useDroppable,
   DragStartEvent,
   MeasuringStrategy,
   DropAnimation,
   defaultDropAnimation,
+  DragOverEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  rectSortingStrategy,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, PlusCircle } from 'lucide-react';
+import { GripVertical, PlusCircle, Loader2 } from 'lucide-react';
 
 const findContainer = (items: SortableChartConfig[][], id: UniqueIdentifier | undefined): number | undefined => {
   if (!id) {
@@ -89,8 +87,7 @@ function NewRowDropZone({ isDark, isOver }: { isDark: boolean, isOver: boolean }
   );
 }
 
-// Droppable area for each row
-function RowContainer({ id, children, isDark }: { id: string, children: React.ReactNode, isDark: boolean }) {
+function RowContainer({ id, children, isDark, isOver }: { id: string, children: React.ReactNode, isDark: boolean, isOver: boolean }) {
   const { setNodeRef } = useDroppable({
     id: `row-${id}`,
   });
@@ -99,7 +96,11 @@ function RowContainer({ id, children, isDark }: { id: string, children: React.Re
     <div 
       ref={setNodeRef}
       data-row-container
-      className={`flex flex-row gap-6 w-full p-3 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100/70'} min-h-[550px]`}
+      className={`flex flex-row gap-6 w-full p-3 rounded-lg transition-colors ${
+        isOver 
+          ? (isDark ? 'bg-blue-900/20' : 'bg-blue-100/50') 
+          : ''
+      } ${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100/70'} min-h-[550px]`}
     >
       {children}
     </div>
@@ -163,6 +164,7 @@ function Dashboard({ config }: { config: DashboardConfig }) {
     
     const startingRowRef = useRef<number | null>(null);
     const [layoutChangeId, setLayoutChangeId] = useState(0);
+    const [isLoadingLayout, setIsLoadingLayout] = useState(true);
 
     useEffect(() => {
       const dashboardId = config.id || 'default';
@@ -181,6 +183,7 @@ function Dashboard({ config }: { config: DashboardConfig }) {
           
           if (allChartsPresent && hasValidLayout) {
             setItems(parsedLayout);
+            setIsLoadingLayout(false);
             return;
           }
         }
@@ -192,6 +195,7 @@ function Dashboard({ config }: { config: DashboardConfig }) {
         ...chart, 
         id: getChartId(chart) 
       }]));
+      setIsLoadingLayout(false);
     }, [config.charts, config.id]);
 
     useEffect(() => {
@@ -224,6 +228,31 @@ function Dashboard({ config }: { config: DashboardConfig }) {
 
       if (rowIndex !== undefined) {
         setCurrentContainer(`row-${rowIndex}`);
+      } else {
+        setCurrentContainer(null);
+      }
+    }
+
+    function handleDragOver(event: DragOverEvent) {
+      const { over } = event;
+      const overId = over?.id;
+
+      if (overId === 'new-row-drop-zone') {
+        setIsOverNewRowZone(true);
+        setCurrentContainer(null);
+      } else {
+        setIsOverNewRowZone(false);
+        if (typeof overId === 'string' && overId.startsWith('row-')) {
+          setCurrentContainer(overId);
+        } else {
+          const overContainerIndex = findContainer(items, overId);
+          if (overContainerIndex !== undefined) {
+            setCurrentContainer(`row-${overContainerIndex}`);
+          } else if (currentContainer !== null && overId !== activeId) {
+          } else {
+            setCurrentContainer(null);
+          }
+        }
       }
     }
 
@@ -326,6 +355,17 @@ function Dashboard({ config }: { config: DashboardConfig }) {
       return chart.title || `chart-${chart.chartType}`;
     };
 
+    if (isLoadingLayout) {
+      return (
+        <div className="flex justify-center items-center min-h-[600px] w-full">
+          <Loader2 
+            className={`h-18 w-12 animate-spin ${isDark ? 'text-blue-400' : 'text-blue-600'}`}
+            strokeWidth={4.5}
+          />
+        </div>
+      );
+    }
+
     return (
         <div className={`w-full pr-3 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
             {/* Header */}
@@ -349,6 +389,7 @@ function Dashboard({ config }: { config: DashboardConfig }) {
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
               measuring={{
                 droppable: {
                   strategy: MeasuringStrategy.Always,
@@ -362,6 +403,7 @@ function Dashboard({ config }: { config: DashboardConfig }) {
                     key={`row-${rowIndex}-${layoutChangeId}`} 
                     id={String(rowIndex)}
                     isDark={isDark}
+                    isOver={currentContainer === `row-${rowIndex}`}
                   >
                     <SortableContext 
                       items={rowItems.map(item => item.id)} 
