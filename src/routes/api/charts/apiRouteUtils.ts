@@ -23,24 +23,3 @@ export function registerChartApiRoutes(): void {
         pathsSet.add(endpoint.path);
     });
 }
-
-/**
- * Gets chart data for a specific API endpoint path
- * @param path The API endpoint path
- * @returns The chart data or null if not found
- */
-export function getChartDataByPath(path: string): any | null {
-    const endpoints = getAllApiEndpoints();
-    const endpoint = endpoints.find(e => e.path === path);
-
-    if (!endpoint) {
-        return null;
-    }
-
-    try {
-        return endpoint.dataGetter();
-    } catch (error) {
-        console.error(`Error retrieving data for path ${path}:`, error);
-        return null;
-    }
-}
