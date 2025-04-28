@@ -3,10 +3,6 @@ import { getAllApiEndpoints } from '~/components/Graph/dashboards/dashboardConfi
 /**
  * Registers all chart API routes with the application
  * This is called during the application initialization
- *
- * Note: This function doesn't actually need to register anything since
- * we're using a wildcard route handler, but it's useful for validation
- * and possibly future enhancements.
  */
 export function registerChartApiRoutes(): void {
     // Get all endpoints
@@ -26,4 +22,25 @@ export function registerChartApiRoutes(): void {
         }
         pathsSet.add(endpoint.path);
     });
+}
+
+/**
+ * Gets chart data for a specific API endpoint path
+ * @param path The API endpoint path
+ * @returns The chart data or null if not found
+ */
+export function getChartDataByPath(path: string): any | null {
+    const endpoints = getAllApiEndpoints();
+    const endpoint = endpoints.find(e => e.path === path);
+
+    if (!endpoint) {
+        return null;
+    }
+
+    try {
+        return endpoint.dataGetter();
+    } catch (error) {
+        console.error(`Error retrieving data for path ${path}:`, error);
+        return null;
+    }
 }
