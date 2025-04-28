@@ -42,9 +42,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       localStorage.setItem(THEME_STORAGE_KEY, theme);
       
       if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
       } else {
-        document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
       }
     }
   }, [theme]);

@@ -15,7 +15,7 @@
 /* Dark mode */
 .theme-dark,
 :root.dark .theme-light {
-  --bg-primary: #111827;
+  --bg-primary: rgba(16, 16, 16, 0.78);
   --bg-secondary: #1f2937;
   --bg-tertiary: #374151;
   --text-primary: #f9fafb;
