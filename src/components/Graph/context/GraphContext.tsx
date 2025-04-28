@@ -41,13 +41,13 @@ interface GraphContextProviderProps {
 
 // 上下文提供者组件
 export const GraphContextProvider: React.FC<GraphContextProviderProps> = ({
-  children,
-  initialDashboardId = 'default',
-  initialOptions = {}
-}) => {
+                                                                            children,
+                                                                            initialDashboardId = 'default',
+                                                                            initialOptions = {}
+                                                                          }) => {
   // 状态
   const [currentDashboard, setCurrentDashboard] = useState<DashboardConfig | null>(
-    dashboardConfigs[initialDashboardId] || dashboardConfigs['default']
+      dashboardConfigs[initialDashboardId] || dashboardConfigs['default']
   );
   const [options, setOptions] = useState<GraphComponentOptions>({
     ...defaultOptions,
@@ -60,13 +60,13 @@ export const GraphContextProvider: React.FC<GraphContextProviderProps> = ({
   const setDashboard = (dashboardId: string | number) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const dashboard = dashboardConfigs[dashboardId];
       if (!dashboard) {
         throw new Error(`Dashboard with ID ${dashboardId} not found`);
       }
-      
+
       setCurrentDashboard(dashboard);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -97,19 +97,19 @@ export const GraphContextProvider: React.FC<GraphContextProviderProps> = ({
   };
 
   return (
-    <GraphContext.Provider value={contextValue}>
-      {children}
-    </GraphContext.Provider>
+      <GraphContext.Provider value={contextValue}>
+        {children}
+      </GraphContext.Provider>
   );
 };
 
 // 自定义Hook，用于访问图表上下文
 export const useGraphContext = (): GraphContextValue => {
   const context = useContext(GraphContext);
-  
+
   if (context === undefined) {
     throw new Error('useGraphContext must be used within a GraphContextProvider');
   }
-  
+
   return context;
-}; 
+};
