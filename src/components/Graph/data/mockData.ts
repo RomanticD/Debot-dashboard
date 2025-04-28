@@ -1,7 +1,5 @@
 class MockDataService {
-    // 柱状图分类
     bar = {
-        // 基础柱状图
         basic: {
             salesComparison: {
                 xAxisData: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'],
@@ -13,7 +11,6 @@ class MockDataService {
             }
         },
         
-        // 多系列柱状图
         multiSeries: {
             annualComparison: {
                 xAxisData: ['一月', '二月', '三月', '四月', '五月', '六月'],
@@ -30,8 +27,6 @@ class MockDataService {
                 ]
             }
         },
-
-        // 横向柱状图
         horizontal: {
             populationRanking: {
                 yAxisData: ['巴西', '印尼', '美国', '印度', '中国', '世界人口'],
@@ -44,7 +39,6 @@ class MockDataService {
         }
     };
 
-    // 折线图分类（保持相同结构）
     line = {
         basic: {
             websiteTraffic: {

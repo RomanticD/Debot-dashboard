@@ -1,10 +1,11 @@
 import * as echarts from 'echarts';
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChartConfig, ChartData } from '~/components/Graph/types/charts';
-import chartOptionGenerators from '~/components/Graph/utils/chartOptionGenerators';
+import { createChartOptions } from '~/components/Graph/utils/chartOptionGenerators';
 import { useQuery } from '@tanstack/react-query';
 import ChartSkeleton from './Skeleton';
 import { useTheme } from '~/components/Graph/context/ThemeContext';
+import {EChartsOption} from "echarts";
 
 
 function Chart({ config }: { config: ChartConfig }) {
@@ -42,34 +43,16 @@ function Chart({ config }: { config: ChartConfig }) {
 
         try {
             const chartType = config.chartType;
-            const option = chartOptionGenerators[chartType](chartData);
-            chartInstanceRef.current.setOption({
-                ...option,
-                title: {
-                    text: config.title,
-                    subtext: config.subtext,
-                    left: 'center',
-                    top: 0,
-                    ...(theme === 'dark' ? { textStyle: { color: '#e5e7eb' } } : {})
-                },
-                tooltip: {
-                    trigger: 'item'
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '10%',
-                    containLabel: true
-                },
-                legend: {
-                    ...(theme === 'dark'
-                        ? { textStyle: { color: '#e5e7eb' } }
-                        : { textStyle: { color: '#1f2937' } }),
-                    bottom: 0,
-                    left: 'center'
-                },
-                ...config.customOptions
-            });
+            const options: EChartsOption = createChartOptions(
+                chartType,
+                chartData,
+                theme as 'light' | 'dark',
+                config.title,
+                config.subtext,
+                config.customOptions
+            );
+            
+            chartInstanceRef.current.setOption(options);
         } catch (e) {
             console.error("Error updating chart with data:", e);
         }
