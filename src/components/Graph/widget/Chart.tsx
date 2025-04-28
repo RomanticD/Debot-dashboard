@@ -58,8 +58,15 @@ function Chart({ config }: { config: ChartConfig }) {
                 grid: {
                     left: '3%',
                     right: '4%',
-                    bottom: '3%',
+                    bottom: '10%',
                     containLabel: true
+                },
+                legend: {
+                    ...(theme === 'dark'
+                        ? { textStyle: { color: '#e5e7eb' } }
+                        : { textStyle: { color: '#1f2937' } }),
+                    bottom: 0,
+                    left: 'center'
                 },
                 ...config.customOptions
             });
